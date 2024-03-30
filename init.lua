@@ -50,6 +50,7 @@ vim.opt.splitbelow = true
 --  and `:help 'listchars'`
 vim.opt.list = true
 vim.opt.listchars = { tab = '\\t ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = '󰌒 ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
@@ -72,6 +73,51 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+-- Move lines
+vim.keymap.set('n', '<A-Up>', ':m-2<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<A-Down>', ':m+1<CR>', { noremap = true, silent = true })
+
+-- Indent, dedent
+vim.keymap.set('n', '<tab>', ':><CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<S-tab>', ':<<CR>', { noremap = true, silent = true })
+
+-- Add a new line before current line
+vim.api.nvim_set_keymap('n', '<CR>', 'mzO<Esc>`z', { noremap = true, silent = true })
+
+-- Add a new line after the current line
+vim.api.nvim_set_keymap('n', '<S-CR>', 'mzo<Esc>`z', { noremap = true, silent = true })
+
+-- Map <S-Delete> to delete the next line if it's empty
+vim.api.nvim_set_keymap('n', '<Del>', ':lua delete_next_empty_line()<CR>', { noremap = true, silent = true })
+
+function delete_next_empty_line()
+  local current_line = vim.fn.line '.'
+  local next_line = vim.fn.line '.' + 1
+  local next_line_content = vim.fn.getline(next_line)
+
+  -- If the next line is empty, delete it
+  if next_line_content == '' then
+    vim.fn.execute('normal! ' .. next_line .. 'Gdd')
+  else
+    -- Evaluate the current line and delete it if it's empty
+    vim.fn.execute('normal! ' .. current_line .. 'G')
+    vim.fn.execute 'normal! V'
+    vim.fn.execute 'normal! :silent! !echo -n ""'
+    local current_line_content = vim.fn.getline(current_line)
+    if current_line_content == '' then
+      vim.fn.execute 'normal! dd'
+    end
+  end
+
+  -- Restore the cursor position to the original line
+  vim.fn.execute('normal! ' .. current_line .. 'G')
+end
+
+vim.keymap.set('n', '<S-Del>', ':join<CR>', { noremap = true, silent = true })
+
+-- Remove previous line if empty
+vim.keymap.set('n', '<BS>', ':if empty(getline(line(".")-1)) | execute line(".")-1 . "delete" | endif<CR>', { noremap = true, silent = true })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -106,6 +152,15 @@ vim.opt.rtp:prepend(lazypath)
 
 -- [[ Configure and install plugins ]]
 require('lazy').setup({
+  -- Rose pine theme
+  {
+    'rose-pine/neovim',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd [[ colorscheme rose-pine-main ]]
+    end,
+  },
   -- Hightligth other uses of the word under the cursor
   'RRethy/vim-illuminate',
 
@@ -459,7 +514,7 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettierd', 'prettier' } },
       },
     },
   },
@@ -569,24 +624,6 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
@@ -663,31 +700,6 @@ require('lazy').setup({
     'stevearc/oil.nvim',
     opts = {},
     dependencies = { 'nvim-tree/nvim-web-devicons' },
-  },
-
-  -- Setup Neorg
-  {
-    'nvim-neorg/neorg',
-    build = ':Neorg sync-parsers',
-    lazy = true,
-    ft = 'norg',
-    cmd = 'Neorg',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      require('neorg').setup {
-        load = {
-          ['core.defaults'] = {},
-          ['core.concealer'] = {},
-          ['core.dirman'] = {
-            config = {
-              workspaces = {
-                Philosophy = '~/Workspaces/Philosophy/',
-              },
-            },
-          },
-        },
-      }
-    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
