@@ -77,6 +77,9 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- Move lines
 vim.keymap.set('n', '<A-Up>', ':m-2<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<A-Down>', ':m+1<CR>', { noremap = true, silent = true })
+-- Move selected lines up
+vim.keymap.set('v', '<A-Up>', ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
+vim.keymap.set('v', '<A-Down>', ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
 
 -- Indent, dedent
 vim.keymap.set('n', '<tab>', ':><CR>', { noremap = true, silent = true })
@@ -445,7 +448,7 @@ require('lazy').setup({
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
         --
-
+        astro = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -668,7 +671,20 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'astro',
+        'bash',
+        'c',
+        'css',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'typescript',
+        'tsx',
+        'vim',
+        'vimdoc',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
